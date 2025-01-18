@@ -1,0 +1,7 @@
+# Ignore all terraform files and folder
+# Only keep .tf files
+.terraform.*
+.terraform/
+terraform.*
+hashicorp/
+.env
