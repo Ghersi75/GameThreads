@@ -1,0 +1,15 @@
+---
+- name: Setup Github Actions Runner on EC2
+  hosts: all
+  become: true  # use sudo for tasks
+  vars:
+    actions-token: '{{ lookup("env", "ACTIONS_TOKEN") }}'
+  tasks:
+    - name: Remove Actions Runner
+      become_user: ubuntu
+      shell: |
+        ./config.sh remove --token {{ actions-token }}
+      args:
+        # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/command_module.html
+        # chdir -> Change directory before running the command
+        chdir: /home/ubuntu/actions-runner

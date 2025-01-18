@@ -1,0 +1,73 @@
+# https://github.com/MonolithProjects/ansible-github_actions_runner/blob/master/tasks/install_runner_unix.yml
+# "Inspired by" github repo above
+---
+- name: Setup Github Actions Runner on EC2
+  hosts: all
+  become: true  # use sudo for tasks
+  vars:
+    actions-token: '{{ lookup("env", "ACTIONS_TOKEN") }}'
+  tasks:
+    # # Clean things up in case a runner is pre configured
+    # - name: Delete Runner Directory if exists
+    #   file:
+    #     # https://stackoverflow.com/a/38201526
+    #     path: /home/ubuntu/actions-runner
+    #     state: absent
+
+    - name: Create Runner Directory
+      file:
+        path: /home/ubuntu/actions-runner
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        # 0755 means directory own can read write and execute in it
+        mode: "0755"
+      
+    - name: Download GitHub Actions Runner
+      get_url:
+        url: "https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz"
+        dest: "/home/ubuntu/actions-runner/actions-runner.tar.gz"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0755"
+
+    - name: Extract GitHub Actions Runner
+      become_user: ubuntu
+      # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/unarchive_module.html
+      unarchive:
+        src: "/home/ubuntu/actions-runner/actions-runner.tar.gz"
+        dest: "/home/ubuntu/actions-runner"
+        remote_src: yes
+
+    # Useful for development since a runner may be setup but fails later down the line
+    # This ensures that a runner is removed if it exists so things can be done from the start
+    - name: Remove Actions Runner if exists
+      become_user: ubuntu
+      shell: |
+        ./config.sh remove --token {{ actions-token }}
+      args:
+        # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/command_module.html
+        # chdir -> Change directory before running the command
+        chdir: /home/ubuntu/actions-runner
+
+    - name: Configure Actions Runner
+      become_user: ubuntu
+      shell: |
+        ./config.sh --url https://github.com/Ghersi75/GameThreads --token {{ actions-token }} --unattended --labels test
+      args:
+        chdir: /home/ubuntu/actions-runner
+    
+    - name: Copy systemd service file
+      template:
+        src: github-actions-runner.service.j2
+        dest: /etc/systemd/system/actions-runner.service
+
+    - name: Reload systemd daemon
+      systemd:
+        daemon_reload: yes
+    
+    - name: Enable and start Github Actions Runner Service
+      systemd:
+        name: actions-runner
+        enabled: yes
+        state: started
