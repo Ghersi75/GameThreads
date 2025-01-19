@@ -2,6 +2,7 @@ package com.gamethreads.gamethreads.model;
 
 import com.gamethreads.gamethreads.dto.user.NewUserDTO;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,8 +21,13 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(unique = true)
   private String displayName;
+
+  @Column(unique = true)
   private String email;
+  
   private String password;
 
   public User(NewUserDTO newUserDTO) {
