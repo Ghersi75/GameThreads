@@ -12,6 +12,8 @@ import com.gamethreads.gamethreads.dto.user.NewUserDTO;
 import com.gamethreads.gamethreads.model.User;
 import com.gamethreads.gamethreads.service.UserService;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/user")
 public class UserController {
@@ -27,7 +29,7 @@ public class UserController {
   }
 
   @PostMapping("/new")
-  public User createUserHandler(@RequestBody NewUserDTO newUserDTO) {
+  public User createUserHandler(@RequestBody @Valid NewUserDTO newUserDTO) {
     return this.userService.createUser(newUserDTO);
   }
 }
